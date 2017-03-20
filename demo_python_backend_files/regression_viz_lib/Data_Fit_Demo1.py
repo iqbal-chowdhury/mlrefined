@@ -1,16 +1,25 @@
+# import basic data loading and handling library
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import math
+
+# import sklearn libraries 
 from sklearn import ensemble
-from sklearn.preprocessing import PolynomialFeatures
+#from sklearn.preprocessing import PolynomialFeatures
 from sklearn import linear_model
 from sklearn.neural_network import MLPRegressor
 from sklearn.ensemble import GradientBoostingRegressor
-from ipywidgets import interact
-from ipywidgets import widgets
 
+# import widgets and animators
 
-import math
+# load in other libs
+import sys
+sys.path.append('../')
+
+# import JS animator
+from JSAnimation import IPython_display
+
 
 class Fit_Bases:
     
@@ -33,14 +42,14 @@ class Fit_Bases:
         self.target_y = data[:,1]
         
     # plot data with underlying target function
-    def plot_all(self):
+    def plot_all(self,ax):
         # plot target if loaded
         if len(self.target_x) > 1:
-            plt.plot(self.target_x,self.target_y,'r--',linewidth = 2.5,zorder = 0)
+            ax.plot(self.target_x,self.target_y,'r--',linewidth = 2.5,zorder = 0)
         
         # plot data if loaded
         if len(self.x) > 1:
-            plt.scatter(self.x,self.y,facecolor = 'k',edgecolor = 'w',linewidth = 1,s = 70)
+            ax.scatter(self.x,self.y,facecolor = 'k',edgecolor = 'w',linewidth = 1,s = 70)
 
         plt.xlim(min(self.x)-0.1,max(self.x)+0.1)
         plt.ylim(min(self.y)-0.1,max(self.y)+0.1)
@@ -48,20 +57,25 @@ class Fit_Bases:
         plt.axis('off')      
         
     # plot approximation
-    def plot_approx(self,clf,domain,transform):
+    def plot_approx(self,clf,domain,ax):
         # use regressor to make predictions
-        z = clf.predict(transform)
+        z = clf.predict(domain)
 
         # plot regressor
-        plt.plot(domain,z,linewidth = 3,color = 'b')
-        plt.ylim(min(min(self.y)-0.1,min(z)-0.1),max(max(self.y)+0.1,max(z)+0.1))
+        ax.plot(domain,z,linewidth = 3,color = 'b')
+        ax.set_ylim(min(min(self.y)-0.1,min(z)-0.1),max(max(self.y)+0.1,max(z)+0.1))
 
     ### demo with animation or sliders - showing function approximation with polynoimal, neural network, and stumps/trees
     # polys
     def browse_poly_fit(self):
+        
+        # initialize figure
+        fig = plt.figure(figsize = (6,6))
+        ax = fig.add_subplot(111)
+        
         def show_fit(num_elements):
             # plot our points and target function
-            self.plot_all()
+            self.plot_all(ax)
             
             # Create linear regression object
             poly = PolynomialFeatures(degree=num_elements)
@@ -70,15 +84,22 @@ class Fit_Bases:
             clf = linear_model.LinearRegression()
             clf.fit(x, self.y)        
 
-            # plot classification boundary and color regions appropriately
+            ### for polynomial fit --- transform input for proper regression fit
             r = np.linspace(min(self.x),max(self.x),300)[:, np.newaxis]
             pr = poly.fit_transform(r)
-
+            
             # plot approximation
-            self.plot_approx(clf,r,pr)
+            artist = self.plot_approx(clf,r)
 
-        interact(show_fit, num_elements=widgets.IntSlider(min=1,max=20,step=1,value=1))
-
+            return artist,
+           
+        anim = animation.FuncAnimation(fig, show_fit,frames=20, interval=20, blit=True)
+        
+        # set frames per second in animation
+        IPython_display.anim_to_html(anim,fps = 20)
+        
+        return(anim)
+            
 
     # demo with animation or sliders - showing function approximation with polynoimal, neural network, and stumps/trees
     def browse_tree_fit(self):
@@ -97,7 +118,7 @@ class Fit_Bases:
             r = np.linspace(min(self.x),max(self.x),300)[:, np.newaxis]
 
             # plot approximation
-            self.plot_approx(clf,r,r)
+            self.plot_approx(clf,r)
 
         interact(show_fit, num_elements=widgets.IntSlider(min=1,max=20,step=1,value=1))
         
@@ -119,7 +140,7 @@ class Fit_Bases:
             r = np.linspace(min(self.x),max(self.x),300)[:, np.newaxis]
 
             # plot approximation
-            self.plot_approx(clf,r,r)
+            self.plot_approx(clf,r)
             
         interact(show_fit, num_elements=widgets.IntSlider(min=1,max=100,step=1,value=1))
 
