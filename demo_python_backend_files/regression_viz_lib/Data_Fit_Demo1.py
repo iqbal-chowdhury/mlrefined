@@ -59,7 +59,12 @@ class Fit_Bases:
 
     ### demo with animation or sliders - showing function approximation with polynoimal, neural network, and stumps/trees
     # polys
-    def browse_poly_fit(self):
+    def browse_fit(self,**args):
+        # pull out model arg
+        model_choice = args['model']
+        
+        # pull out range
+        param_range = args['param_range']
         
         # initialize figure
         fig = plt.figure(figsize = (5,4))
@@ -67,20 +72,26 @@ class Fit_Bases:
         ax = fig.add_subplot(111)
         r = np.linspace(min(self.x),max(self.x),300)[:, np.newaxis]
 
-        def show_fit(num_elements):
+        def show_fit(value):
             ax.cla()
 
             # plot our points and target function
             self.plot_all(ax)
             
             # define classifier object
-            clf = KernelRidge(kernel = 'poly',degree = num_elements)
+            clf = 0
+            
+            # choose between models
+            if model_choice == 'poly':
+                clf = KernelRidge(kernel = 'poly',degree = param_range[value],alpha = 10**-4)
+            if model_choice == 'nnet':
+                clf = MLPRegressor(solver = 'lbgfs',alpha = 0,activation = 'tanh',random_state = 1,hidden_layer_sizes = (param_range[value],param_range[value],param_range[value],param_range[value]),tol=10**-5)
+            if model_choice == 'tree':
+                clf = GradientBoostingRegressor(n_estimators= param_range[value], learning_rate=1,max_depth=2, random_state=0, loss='ls')
+             
+            # fit your model to data
             clf.fit(self.x, self.y)        
-            
-            # clf = GradientBoostingRegressor(n_estimators=num_elements, learning_rate=1,max_depth=2, random_state=0, loss='ls')
-            
-            # clf = MLPRegressor(solver = 'lbgfs',alpha = 0,activation = 'tanh',random_state = 1,hidden_layer_sizes = (num_elements,num_elements))
-                
+
             # plot approximation
             z = clf.predict(r)
 
@@ -89,10 +100,10 @@ class Fit_Bases:
             ax.set_ylim(min(min(self.y)-0.1,min(z)-0.1),max(max(self.y)+0.1,max(z)+0.1))
             return artist,
            
-        anim = animation.FuncAnimation(fig, show_fit,frames=20, interval=20, blit=True)
+        anim = animation.FuncAnimation(fig, show_fit,frames=len(param_range), interval=len(param_range), blit=True)
         
         # set frames per second in animation
-        IPython_display.anim_to_html(anim,fps = 20)
+        IPython_display.anim_to_html(anim,fps = len(param_range))
         
         return(anim)
        
