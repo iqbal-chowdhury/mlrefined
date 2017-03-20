@@ -1,6 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.animation as animation
+
+# load in other libs
+import sys
+sys.path.append('../')
+
+# import JS animator
 from JSAnimation import IPython_display
 
 class animator():
