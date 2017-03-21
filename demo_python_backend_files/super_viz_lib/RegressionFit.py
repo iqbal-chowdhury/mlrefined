@@ -23,8 +23,8 @@ sys.path.append('../')
 import matplotlib.animation as animation
 from JSAnimation_slider_only import IPython_display
 
-
-class Fit_Bases:
+# begin class
+class RegressionFit:
     
     def __init__(self):
         self.x = 0
@@ -52,7 +52,7 @@ class Fit_Bases:
         # polynomial
         if model_choice == 'poly':
             # get an instance of the linear regressor + transform input via poly
-            poly = PolynomialFeatures(degree=value+1)
+            poly = PolynomialFeatures(degree=value)
             x = poly.fit_transform(self.x)
             regressor = linear_model.LinearRegression()
 
@@ -67,7 +67,7 @@ class Fit_Bases:
                 
         # neural network
         if model_choice == 'nnet':
-            regressor = MLPRegressor(solver = 'lbgfs',alpha = 0,activation = 'tanh',max_iter = 500,hidden_layer_sizes = (param_range[value],param_range[value],param_range[value],param_range[value]),tol=10**-5)
+            regressor = MLPRegressor(solver = 'lbgfs',alpha = 0,activation = 'tanh',max_iter = 500,hidden_layer_sizes = (value,value,value,value),tol=10**-5)
 
             # fit your model to data
             regressor.fit(self.x, self.y)   
@@ -77,7 +77,7 @@ class Fit_Bases:
                 
         # tree-based
         if model_choice == 'tree':
-            regressor = GradientBoostingRegressor(n_estimators= param_range[value], learning_rate=1,max_depth=2, random_state=0, loss='ls')
+            regressor = GradientBoostingRegressor(n_estimators= value, learning_rate=1,max_depth=3, random_state=0, loss='ls')
 
             # fit your model to data
             regressor.fit(self.x, self.y)   
@@ -93,13 +93,14 @@ class Fit_Bases:
     # plot data with underlying target function
     def show_setup(self,ax):
         # plot target if loaded 
-        if len(self.target_x) > 1:
+        if self.target_x.ndim > 1:
             # check dimension of plot
-            if np.shape(self.target_x)[1] == 1:  # two-dimensional target function
-                ax.plot(self.target_x,self.target_y,'r--',linewidth = 2.5,zorder = 0)
-            else:                              # three-dimensional target function
-                a = int(math.sqrt(len(self.target_x[:,0])))
-                ax.plot_surface(np.reshape(self.target_x[:,0],(a,a)),np.reshape(self.target_x[:,1],(a,a)),np.reshape(self.target_y,(a,a)),alpha = 0.05,color = 'r',zorder = 0,shade = True,linewidth = 0)
+            if np.shape(self.target_x)[1] > 1:
+                if np.shape(self.target_x)[1] == 1:  # two-dimensional target function
+                    ax.plot(self.target_x,self.target_y,'r--',linewidth = 2.5,zorder = 0)
+                else:                              # three-dimensional target function
+                    a = int(math.sqrt(len(self.target_x[:,0])))
+                    ax.plot_surface(np.reshape(self.target_x[:,0],(a,a)),np.reshape(self.target_x[:,1],(a,a)),np.reshape(self.target_y,(a,a)),alpha = 0.05,color = 'r',zorder = 0,shade = True,linewidth = 0)
 
         ### plot data ###
         # check dimension of plot
@@ -180,7 +181,13 @@ class Fit_Bases:
             ax = plt.subplot(111,projection = '3d')
         
         # remove whitespace around figure
-        fig.subplots_adjust(left=0,right=1,bottom=0,top=1)          
+        fig.subplots_adjust(left=0,right=1,bottom=0,top=1) 
+        
+        # check to see if target loaded, if not create target range for prediction functions
+        if np.prod(np.shape(self.target_x)) == 1:
+            xgap = (max(self.x) - min(self.x))*0.05
+            self.target_x = np.linspace(min(self.x) - xgap, max(self.x) + xgap,200)
+            self.target_x.shape = (len(self.target_x),1)
         
         # animation sub-function
         def show_fit(value):
@@ -190,7 +197,7 @@ class Fit_Bases:
             self.show_setup(ax)
             
             # fit model to data, then use to predict over the region of input of the true function to make approximation
-            z = self.model_selection(model_choice,value)
+            z = self.model_selection(model_choice,param_range[value])
            
             # plot regressor - two-d or three-d - and clean up plot
             if np.shape(self.x)[1] == 1:     # two-dimensional plot
@@ -201,11 +208,10 @@ class Fit_Bases:
             
             # dress up panel title correctly
             if value == 0:
-                ax.set_title(model_choice + ' fit with ' + str(value+1) + ' basis element',y=0.9,fontsize = 15)
+                ax.set_title(model_choice + ' fit with ' + str(param_range[value]) + ' basis element',y=0.9,fontsize = 15)
             else:
-                ax.set_title(model_choice + ' fit with ' + str(value+1) + ' basis elements',y=0.9,fontsize = 15)
+                ax.set_title(model_choice + ' fit with ' + str(param_range[value]) + ' basis elements',y=0.9,fontsize = 15)
                
-
             return artist,
            
         anim = animation.FuncAnimation(fig, show_fit,frames=len(param_range), interval=len(param_range), blit=True)
