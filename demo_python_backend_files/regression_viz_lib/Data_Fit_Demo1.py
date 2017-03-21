@@ -45,6 +45,49 @@ class Fit_Bases:
         data = np.asarray(pd.read_csv(datacsv))  
         self.x = data[:,0:-1]
         self.y = data[:,-1]
+        
+    ### model selection and prediction function generation ###
+    def model_selection(self,model_choice,value):
+        z = 0
+        # polynomial
+        if model_choice == 'poly':
+            # get an instance of the linear regressor + transform input via poly
+            poly = PolynomialFeatures(degree=value+1)
+            x = poly.fit_transform(self.x)
+            regressor = linear_model.LinearRegression()
+
+            # fit your model to data
+            regressor.fit(x, self.y)   
+
+            # make prediction
+            pr = poly.fit_transform(self.target_x)
+
+            # produce approximation
+            z = regressor.predict(pr)
+                
+        # neural network
+        if model_choice == 'nnet':
+            regressor = MLPRegressor(solver = 'lbgfs',alpha = 0,activation = 'tanh',max_iter = 500,hidden_layer_sizes = (param_range[value],param_range[value],param_range[value],param_range[value]),tol=10**-5)
+
+            # fit your model to data
+            regressor.fit(self.x, self.y)   
+
+            # produce approximation
+            z = regressor.predict(self.target_x)
+                
+        # tree-based
+        if model_choice == 'tree':
+            regressor = GradientBoostingRegressor(n_estimators= param_range[value], learning_rate=1,max_depth=2, random_state=0, loss='ls')
+
+            # fit your model to data
+            regressor.fit(self.x, self.y)   
+
+            # produce approximation
+            z = regressor.predict(self.target_x)
+                
+        # return approximation
+        return z
+    
     
     ### plotting functions ###
     # plot data with underlying target function
@@ -130,15 +173,11 @@ class Fit_Bases:
         
         # switch - two-d or three-d plot
         ax = 0
-        r = 0
         if np.shape(self.x)[1] == 1:     # two-dimensional plot
             # seed panel
             ax = fig.add_subplot(111)
         else:                            # three-dimensional plot
             ax = plt.subplot(111,projection = '3d')
-            
-        # seed range over which to plot fit - just use input of true function
-        r = copy.deepcopy(self.target_x)
         
         # remove whitespace around figure
         fig.subplots_adjust(left=0,right=1,bottom=0,top=1)          
@@ -150,50 +189,12 @@ class Fit_Bases:
             # plot our points and target function
             self.show_setup(ax)
             
-            # define regressor object
-            regressor = 0
-            z = 0
-            
-            ### choose between models
-            # polynomial
-            if model_choice == 'poly':
-                # get an instance of the linear regressor + transform input via poly
-                poly = PolynomialFeatures(degree=value+1)
-                x = poly.fit_transform(self.x)
-                regressor = linear_model.LinearRegression()
-                
-                # fit your model to data
-                regressor.fit(x, self.y)   
-                
-                # make prediction
-                pr = poly.fit_transform(r)
-                
-                # produce approximation
-                z = regressor.predict(pr)
-                
-            # neural network
-            if model_choice == 'nnet':
-                regressor = MLPRegressor(solver = 'lbgfs',alpha = 0,activation = 'tanh',max_iter = 500,hidden_layer_sizes = (param_range[value],param_range[value],param_range[value],param_range[value]),tol=10**-5)
-                
-                # fit your model to data
-                regressor.fit(self.x, self.y)   
-            
-                # produce approximation
-                z = regressor.predict(r)
-                
-            # tree-based
-            if model_choice == 'tree':
-                regressor = GradientBoostingRegressor(n_estimators= param_range[value], learning_rate=1,max_depth=2, random_state=0, loss='ls')
-             
-                # fit your model to data
-                regressor.fit(self.x, self.y)   
-
-                # produce approximation
-                z = regressor.predict(r)
-
+            # fit model to data, then use to predict over the region of input of the true function to make approximation
+            z = self.model_selection(model_choice,value)
+           
             # plot regressor - two-d or three-d - and clean up plot
             if np.shape(self.x)[1] == 1:     # two-dimensional plot
-                ax.plot(r,z,linewidth = 3,color = 'b')
+                ax.plot(self.target_x,z,linewidth = 3,color = 'b')
             else:                            # three-dimensional plot
                 a = int(math.sqrt(len(self.target_x[:,0])))
                 ax.plot_surface(np.reshape(self.target_x[:,0],(a,a)),np.reshape(self.target_x[:,1],(a,a)),np.reshape(z,(a,a)),alpha = 0.1,color = 'b',zorder = 0,shade = True,linewidth=0.5,antialiased = True,cstride = 50, rstride = 50)
