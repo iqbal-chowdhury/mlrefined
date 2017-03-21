@@ -92,15 +92,13 @@ class RegressionFit:
     ### plotting functions ###
     # plot data with underlying target function
     def show_setup(self,ax):
-        # plot target if loaded 
-        if self.target_x.ndim > 1:
-            # check dimension of plot
-            if np.shape(self.target_x)[1] > 1:
-                if np.shape(self.target_x)[1] == 1:  # two-dimensional target function
-                    ax.plot(self.target_x,self.target_y,'r--',linewidth = 2.5,zorder = 0)
-                else:                              # three-dimensional target function
-                    a = int(math.sqrt(len(self.target_x[:,0])))
-                    ax.plot_surface(np.reshape(self.target_x[:,0],(a,a)),np.reshape(self.target_x[:,1],(a,a)),np.reshape(self.target_y,(a,a)),alpha = 0.05,color = 'r',zorder = 0,shade = True,linewidth = 0)
+        # check dimension of plot
+        if np.prod(np.shape(self.target_y)) > 1:
+            if np.shape(self.target_x)[1] == 1:  # two-dimensional target function
+                ax.plot(self.target_x,self.target_y,'r--',linewidth = 2.5,zorder = 0)
+            else:                              # three-dimensional target function
+                a = int(math.sqrt(len(self.target_x[:,0])))
+                ax.plot_surface(np.reshape(self.target_x[:,0],(a,a)),np.reshape(self.target_x[:,1],(a,a)),np.reshape(self.target_y,(a,a)),alpha = 0.05,color = 'r',zorder = 0,shade = True,linewidth = 0)
 
         ### plot data ###
         # check dimension of plot
@@ -115,7 +113,6 @@ class RegressionFit:
             self.panel_2d_cleanup(ax)
         else:                             # three-dimensional target function
             self.panel_3d_cleanup(ax)
-
 
     # function for cleaning up 2-dim panel in a consistent way
     def panel_2d_cleanup(self,ax):
@@ -184,7 +181,7 @@ class RegressionFit:
         fig.subplots_adjust(left=0,right=1,bottom=0,top=1) 
         
         # check to see if target loaded, if not create target range for prediction functions
-        if np.prod(np.shape(self.target_x)) == 1:
+        if np.prod(np.shape(self.target_y)) == 1:
             xgap = (max(self.x) - min(self.x))*0.05
             self.target_x = np.linspace(min(self.x) - xgap, max(self.x) + xgap,200)
             self.target_x.shape = (len(self.target_x),1)
@@ -208,9 +205,9 @@ class RegressionFit:
             
             # dress up panel title correctly
             if value == 0:
-                ax.set_title(model_choice + ' fit with ' + str(param_range[value]) + ' basis element',y=0.9,fontsize = 15)
+                ax.set_title(model_choice + ' fit with ' + str(param_range[value]) + ' basis element',y=0.9,fontsize = 17)
             else:
-                ax.set_title(model_choice + ' fit with ' + str(param_range[value]) + ' basis elements',y=0.9,fontsize = 15)
+                ax.set_title(model_choice + ' fit with ' + str(param_range[value]) + ' basis elements',y=0.9,fontsize = 17)
                
             return artist,
            
