@@ -16,6 +16,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 from IPython import display
+import matplotlib.animation as animation
+from JSAnimation import IPython_display
+
 
 # calculate cost function at input w
 def calculate_cost_value(w):
@@ -155,3 +158,15 @@ def plot_steps_with_surrogate(w_path):
                 ax1.plot(s,t,'--k')
                 display.clear_output(wait=True)
                 display.display(plt.gcf()) 
+                      
+        return artist,
+           
+    # create animation object
+    anim = animation.FuncAnimation(fig, show_episode,frames=min(100,max_len),interval=min(100,max_len), blit=True)
+        
+    # set frames per second in animation
+    IPython_display.anim_to_html(anim,fps = min(100,max_len)/float(5))
+    
+    return(anim)
+    
+    
