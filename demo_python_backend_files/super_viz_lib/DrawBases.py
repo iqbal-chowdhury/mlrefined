@@ -26,7 +26,7 @@ class draw:
 
         for m in range(1,5):
             # make basis element
-            f_m = self.make_1d_poly(x,m)
+            f_m = x**degree
 
             # plot the current element
             ax = fig.add_subplot(1,4,m)
