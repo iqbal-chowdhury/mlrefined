@@ -7,7 +7,7 @@ import math
 import copy
 
 # import sklearn libraries 
-from sklearn.preprocessing import PolynomialFeatures
+#from sklearn.preprocessing import PolynomialFeatures
 from sklearn import linear_model
 from sklearn.neural_network import MLPRegressor
 from sklearn import ensemble
