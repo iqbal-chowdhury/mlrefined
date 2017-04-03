@@ -91,6 +91,8 @@ class learner():
                 # update current location of agent 
                 grid.agent = grid.state_index_to_tuple(state_index = s_k)
                 
+                # update training reward
+                total_episode_reward+=r_k
             # print out update if verbose set to True
             if 'verbose' in args:
                 if args['verbose'] == True:
