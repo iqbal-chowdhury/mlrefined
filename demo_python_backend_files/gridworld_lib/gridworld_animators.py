@@ -104,7 +104,7 @@ class animator():
         
         # initialize figure
         fsize = 3
-        if grid.width:
+        if grid.width > 10:
             fsize = 5
         fig = plt.figure(figsize = (12,fsize))
         axs = []
@@ -139,13 +139,19 @@ class animator():
                 
                 # color gridworld for this episode and step
                 grid.color_gridworld(ax = ax)
+                
+                # set title
+                if k == 0:
+                    ax.set_title('random')
+                else:
+                    ax.set_title('exploration/exploitation')
             return artist,
            
         # create animation object
         anim = animation.FuncAnimation(fig, show_episode,frames=min(100,max_len), interval=min(100,max_len), blit=True)
         
         # set frames per second in animation
-        IPython_display.anim_to_html(anim,fps = min(100,max_len)/float(5))
+        IPython_display.anim_to_html(anim,fps = min(100,max_len)/float(6))
     
         return(anim)
     

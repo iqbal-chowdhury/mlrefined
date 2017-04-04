@@ -101,7 +101,7 @@ class environment():
             self.grid[block[0]][block[1]] = 1   
             temp.append(block)
 
-        # initialize goal location
+        # initialize hazards location
         self.hazards = temp
                 
         ### initialize state index, Q matrix, and action choices ###
