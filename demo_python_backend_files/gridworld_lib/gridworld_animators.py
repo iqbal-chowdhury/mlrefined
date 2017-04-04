@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.animation as animation
 from JSAnimation import IPython_display
+import time
+from IPython.display import clear_output
 
 class animator():
         
@@ -95,13 +97,17 @@ class animator():
                 # fig.subplots_adjust(left=0,right=1,bottom=0,top=1)  ## gets rid of the white space around image
 
             return artist,
-
+        
         # create animation object
         anim = animation.FuncAnimation(fig, show_episode,frames=min(100,max_len), interval=min(100,max_len), blit=True)
 
         # set frames per second in animation
         IPython_display.anim_to_html(anim,fps = min(100,max_len)/float(10))
-
+        
+        print '...done!'
+        time.sleep(1)
+        clear_output()
+        
         return(anim)
     
     ### compare training episodes from two q-learning settings ###    
@@ -163,13 +169,17 @@ class animator():
                 else:
                     ax.set_title('exploration/exploitation')
             return artist,
-           
+        
         # create animation object
         anim = animation.FuncAnimation(fig, show_episode,frames=min(100,max_len), interval=min(100,max_len), blit=True)
         
         # set frames per second in animation
         IPython_display.anim_to_html(anim,fps = min(100,max_len)/float(10))
     
+        print '...done!'
+        time.sleep(1)
+        clear_output()
+        
         return(anim)
     
     ### animate training episode from one version of q-learning ###
@@ -226,11 +236,15 @@ class animator():
                 ax.set_title('episode = ' + str(episode_num + 1))
                 
             return artist,
-           
+
         # create animation object
         anim = animation.FuncAnimation(fig, show_episode,frames=min(100,max_len), interval=min(100,max_len), blit=True)
         
         # set frames per second in animation
         IPython_display.anim_to_html(anim,fps = min(100,max_len)/float(10))
-    
+        
+        print '...done!'
+        time.sleep(1)
+        clear_output()
+        
         return(anim)
