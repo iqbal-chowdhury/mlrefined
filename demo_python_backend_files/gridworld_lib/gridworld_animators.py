@@ -14,7 +14,10 @@ class animator():
         starting_locs = starting_locations
         
         # initialize figure
-        fig = plt.figure(figsize = (10,3))
+        fsize = 3
+        if grid.width:
+            fsize = 5
+        fig = plt.figure(figsize = (12,fsize))
         axs = []
         for i in range(len(starting_locs)):
             ax = fig.add_subplot(1,len(starting_locs),i+1,aspect = 'equal')
@@ -100,7 +103,10 @@ class animator():
         training_episodes_history_v2 = learner_2.training_episodes_history
         
         # initialize figure
-        fig = plt.figure(figsize = (10,3))
+        fsize = 3
+        if grid.width:
+            fsize = 5
+        fig = plt.figure(figsize = (12,fsize))
         axs = []
         for i in range(2):
             ax = fig.add_subplot(1,2,i+1,aspect = 'equal')
@@ -150,7 +156,10 @@ class animator():
         training_episodes_history = learner.training_episodes_history
 
         # initialize figure
-        fig = plt.figure(figsize = (10,3))
+        fsize = 3
+        if grid.width:
+            fsize = 5
+        fig = plt.figure(figsize = (12,fsize))
         axs = []
         for i in range(len(episodes)):
             ax = fig.add_subplot(1,len(episodes),i+1,aspect = 'equal')

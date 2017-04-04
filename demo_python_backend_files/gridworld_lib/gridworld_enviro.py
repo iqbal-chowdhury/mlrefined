@@ -148,9 +148,9 @@ class environment():
         if 'ax' in args:
             ax = args['ax']
         else: 
-            fsize = 4
+            fsize = 6
             if self.width > 20:
-                fsize = 8
+                fsize = 12
             fig = plt.figure(figsize = (fsize,fsize),frameon=False)
             ax = fig.add_subplot(111, aspect='equal')
 
