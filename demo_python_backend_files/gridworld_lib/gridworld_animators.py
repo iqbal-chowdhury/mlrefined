@@ -112,7 +112,6 @@ class animator():
         episode = args['episode']
         
         # make local copies of input
-        grid = gridworld
         training_episodes_history_v1 = learner_1.training_episodes_history
         training_episodes_history_v2 = learner_2.training_episodes_history
         
