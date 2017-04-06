@@ -7,7 +7,7 @@ class learner():
         self.grid = args['gridworld']
         
         # initialize q-learning params
-        self.gamma = 0.8
+        self.gamma = 1
         self.max_steps = 5*self.grid.width*self.grid.height
         self.exploit_param = 0.5
         self.action_method = 'exploit'
@@ -91,6 +91,8 @@ class learner():
                 # update current location of agent 
                 grid.agent = grid.state_index_to_tuple(state_index = s_k)
                 
+                # update training reward
+                total_episode_reward+=r_k
             # print out update if verbose set to True
             if 'verbose' in args:
                 if args['verbose'] == True:
@@ -107,23 +109,23 @@ class learner():
                     reward = self.validate(Q)
                     self.validation_reward.append(reward)
 
-        # save Q function
         self.Q = Q  # make a global version
-        csvname = 'algo1_Qmat'
-        self.save_qmat(self.Q,csvname)
+        
+        # save Q function 
+        self.save_qmat()
             
         print 'q-learning algorithm complete'
         
     ### save Q matrix ###
-    def save_qmat(self,Q,csvname):
+    def save_qmat(self):
         states_print = []
         for i in range(len(self.grid.states)):
             s = str(self.grid.states[i])
             t = str('(') + s[0] + ',' + s[1] + str(')')
             states_print.append(t)
             
-        df = pd.DataFrame(Q,columns=['up','down','left','right'], index=states_print)
-        df.to_csv('demo_datasets/RL_datasets/' + self.grid.world_size + '_' + self.grid.world_type + '_' +  csvname + '.csv')
+        df = pd.DataFrame(self.Q,columns=['up','down','left','right'], index=states_print)
+        df.to_csv('demo_datasets/RL_datasets/Q_' + self.grid.world_size + '_' + self.grid.world_type + '_' +  self.action_method + '_actions_.csv')
        
     ### run validation episodes ###
     def validate(self,Q):
