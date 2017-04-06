@@ -238,18 +238,17 @@ class environment():
             exploit_param = args['exploit_param']
             r = np.random.rand(1)
             if r < exploit_param:
-                Q = args['Q']
-                s_k_1 = self.state_tuple_to_index(self.agent)
-                a_k = np.argmax(Q[s_k_1,:])
+                h = args['h']
+                a_k = np.argmax(h)
             else:
                 # pick random actions
                 a_k = np.random.randint(len(self.action_choices))
                 
         # choose action based on optimal policy
         elif args['method'] == 'optimal':
-            Q = args['Q']
+            h = args['h']
             s_k_1 = self.state_tuple_to_index(state_tuple = self.agent)
-            a_k = np.argmax(Q[s_k_1,:])
+            a_k = np.argmax(h)
             
         return a_k  # return action index
 

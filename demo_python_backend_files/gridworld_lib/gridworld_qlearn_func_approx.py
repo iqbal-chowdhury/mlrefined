@@ -10,6 +10,7 @@ class learner():
         self.gamma = 1
         self.max_steps = 5*self.grid.width*self.grid.height
         self.exploit_param = 0.5
+        self.step_size = 10**-2
         self.action_method = 'exploit'
         self.training_episodes = 500
         self.validation_episodes = 50
@@ -23,6 +24,8 @@ class learner():
             self.max_steps = args['max_steps']
         if 'action_method' in args:
             self.action_method = args['action_method']
+        if 'step_size' in args:
+            self.step_size = args['step_size']
         if 'exploit_param' in args:
             self.exploit = args['exploit_param']
             self.action_method = 'exploit'
@@ -47,27 +50,34 @@ class learner():
             self.deg = args['degree']
             
         # count dimension of poly
-        test_output = self.poly_features(data = np.zeros((1,2)))
-        self.W = np.zeros((len(test_output),4))
+        test_output = self.poly_features(state = np.zeros((1,2))[0])
+        self.W = np.random.randn(len(test_output),4)
         
     # builds (poly) features based on input data 
-    def poly_features(self,data):
+    def poly_features(self,state):
         # normalize state data
-        data[0]=data[0]/float(self.width)
-        data[1]=data[1]/float(self.height)
+        state[0]=state[0]/float(self.grid.width)
+        state[1]=state[1]/float(self.grid.height)
 
         # produce polynomials of normalized state data
         F = []
         for n in range(self.deg+1):
             for m in range(self.deg+1):
                 if n + m <= self.deg:
-                    temp = (data[:,0]**n)*(data[:,1]**m)
-                    temp.shape = (len(temp),1)
+                    temp = (state[0]**n)*(state[1]**m)
                     F.append(temp)
         F = np.asarray(F)
-        F.shape = (np.shape(F)[0],np.shape(F)[1])
-        return F                
-                       
+        F.shape = (len(F),1)
+        return F           
+    
+    def evaluate_h(self,state):
+        # produce polynomial features from normalized input state
+        F = self.poly_features(state)
+
+        # produce h function values
+        h_eval = np.dot(self.W.T,F)
+        return h_eval
+    
     ### Q-learning function - version 1 - take random actions ###
     def train(self,**args):
         # make local (non-deep) copies of globals for easier reading
@@ -78,13 +88,16 @@ class learner():
         self.training_episodes_history = {}
         self.training_reward = []
         self.validation_reward = []
-        Q = np.zeros((self.grid.width*self.grid.height,len(self.grid.action_choices)))
 
         ### start main Q-learning loop ###
         for n in range(self.training_episodes): 
             # pick this episode's starting position
             grid.agent = self.training_start_schedule[n]
-
+            
+            ### get model functions evaluated at agent current state ###
+            # get tuple location of agent and take poly transform
+            h_eval = self.evaluate_h(np.copy(grid.agent))
+                
             # update Q matrix while loc != goal
             episode_history = []      # container for storing this episode's journey
             total_episode_reward = 0
@@ -95,26 +108,34 @@ class learner():
                 ### if you reach the goal end current episode immediately
                 if grid.agent == grid.goal:
                     break
-                
-                # translate current agent location tuple into index
+                                   
+                ### translate current agent location tuple into index
                 s_k_1 = grid.state_tuple_to_index(grid.agent)
                     
-                # get action
-                a_k = grid.get_action(method = self.action_method,Q = Q,exploit_param = self.exploit_param)
+                ### get action
+                a_k = grid.get_action(method = self.action_method,h = h_eval,exploit_param = self.exploit_param)
                 
-                # move based on this action
+                ### move based on this action
                 s_k = grid.get_movin(action = a_k)
-               
-                # get reward     
+                
+                ### update current location of agent 
+                grid.agent = grid.state_index_to_tuple(state_index = s_k)
+                
+                ### get reward     
                 r_k = grid.get_reward(state_index = s_k) 
                 
-                # update model params
+                ### update model params ###
+                # get poly features from new location
+                h_eval = self.evaluate_h(np.copy(grid.agent))
                 
-                ### update Q function model
-                Q[s_k_1,a_k] = r_k + gamma*max(Q[s_k,:])
-                    
-                # update current location of agent 
-                grid.agent = grid.state_index_to_tuple(state_index = s_k)
+                # update Q function data
+                q_k = r_k + gamma*max(h_eval)
+                
+                # update model given new datapoint
+                j = np.argmin(h_eval)
+                h_j = h_eval[j]
+                grad = self.poly_features(np.copy(grid.agent))    
+                self.W[:,j] = self.W[:,j] - self.step_size*(h_j - q_k)*grad.flatten()    
                 
                 # update training reward
                 total_episode_reward+=r_k
@@ -133,27 +154,11 @@ class learner():
                 if args['validate'] == True:
                     reward = self.validate(Q)
                     self.validation_reward.append(reward)
-
-        self.Q = Q  # make a global version
-        
-        # save Q function 
-        self.save_qmat()
             
         print 'q-learning algorithm complete'
-        
-    ### save Q matrix ###
-    def save_qmat(self):
-        states_print = []
-        for i in range(len(self.grid.states)):
-            s = str(self.grid.states[i])
-            t = str('(') + s[0] + ',' + s[1] + str(')')
-            states_print.append(t)
-            
-        df = pd.DataFrame(self.Q,columns=['up','down','left','right'], index=states_print)
-        df.to_csv('demo_datasets/RL_datasets/Q_' + self.grid.world_size + '_' + self.grid.world_type + '_' +  self.action_method + '_actions_.csv')
-       
+   
     ### run validation episodes ###
-    def validate(self,Q):
+    def validate(self):
         # make local (non-deep) copies of globals for easier reading
         grid = self.grid
         
@@ -175,11 +180,14 @@ class learner():
                 if grid.agent == grid.goal:
                     break
                 
+                # evaluate functions at current location
+                h_eval = self.evaluate_h(np.copy(grid.agent))
+
                 # translate current agent location tuple into index
                 s_k_1 = grid.state_tuple_to_index(grid.agent)
                     
                 # get action
-                a_k = grid.get_action(method = 'optimal',Q = Q)
+                a_k = grid.get_action(method = 'optimal',h = h_eval)
                 
                 # move based on this action - if move takes you out of gridworld don't move and instead move randomly 
                 s_k = grid.get_movin(action = a_k, illegal_move_response = 'random')
