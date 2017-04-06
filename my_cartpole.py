@@ -42,7 +42,10 @@ class my_cartpole():
                     if n < 20 and r == 0:
                         self.env.render()
                     
+                    # select action at random
                     action = self.env.action_space.sample()
+                    
+                    # recieve reward, new state, etc., 
                     observation, reward, done, info = self.env.step(action)  # reward = +1 for every time unit the pole is above a threshold angle, 0 else
 
                     # if done == true alter reward to communicate failure to system reward structure
@@ -90,7 +93,7 @@ class my_cartpole():
                                
         print 'q-learning process complete, best number of average steps in test runs = ' + str(ave_test)     
 
-        # a function to run several test rounds using a candidate set of parameters
+    # a function to run several test rounds using a candidate set of parameters
     def testing(self,thetas):
         num_testing_rounds = 20
         ave_steps = 0

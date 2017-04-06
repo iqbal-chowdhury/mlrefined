@@ -7,7 +7,7 @@ class learner():
         self.grid = args['gridworld']
         
         # initialize q-learning params
-        self.gamma = 0.8
+        self.gamma = 1
         self.max_steps = 5*self.grid.width*self.grid.height
         self.exploit_param = 0.5
         self.action_method = 'exploit'
@@ -16,7 +16,7 @@ class learner():
         self.training_start_schedule = []
         self.validation_start_schedule = []
         
-        # swap out for user defined if desired
+        # swap out for user defined q-learning params if desired
         if "gamma" in args:
             self.gamma = args['gamma']
         if 'max_steps' in args:
@@ -26,17 +26,13 @@ class learner():
         if 'exploit_param' in args:
             self.exploit = args['exploit_param']
             self.action_method = 'exploit'
-        
-        self.training_episodes = 500
         if 'training_episodes' in args:
             self.training_episodes = args['training_episodes']
             # return error if number of training episodes is too big
         if self.training_episodes > self.grid.training_episodes:
             print 'requesting too many training episodes, the maximum num = ' + str(self.grid.training_episodes)
             return 
-        self.training_start_schedule = self.grid.training_start_schedule[:self.training_episodes]
-       
-        self.validation_episodes = 50
+        self.training_start_schedule = self.grid.training_start_schedule[:self.training_episodes]       
         if 'validation_episodes' in args:
             self.validation_episodes = args['validation_episodes']
             # return error if number of training episodes is too big
@@ -45,6 +41,33 @@ class learner():
             return 
         self.validation_start_schedule = self.grid.validation_start_schedule[:self.validation_episodes]
         
+        # initialize function approximation params and weights
+        self.deg = 1
+        if 'degree' in args:
+            self.deg = args['degree']
+            
+        # count dimension of poly
+        test_output = self.poly_features(data = np.zeros((1,2)))
+        self.W = np.zeros((len(test_output),4))
+        
+    # builds (poly) features based on input data 
+    def poly_features(self,data):
+        # normalize state data
+        data[0]=data[0]/float(self.width)
+        data[1]=data[1]/float(self.height)
+
+        # produce polynomials of normalized state data
+        F = []
+        for n in range(self.deg+1):
+            for m in range(self.deg+1):
+                if n + m <= self.deg:
+                    temp = (data[:,0]**n)*(data[:,1]**m)
+                    temp.shape = (len(temp),1)
+                    F.append(temp)
+        F = np.asarray(F)
+        F.shape = (np.shape(F)[0],np.shape(F)[1])
+        return F                
+                       
     ### Q-learning function - version 1 - take random actions ###
     def train(self,**args):
         # make local (non-deep) copies of globals for easier reading
@@ -83,9 +106,11 @@ class learner():
                 s_k = grid.get_movin(action = a_k)
                
                 # get reward     
-                r_k = grid.get_reward(state_index = s_k)          
+                r_k = grid.get_reward(state_index = s_k) 
                 
-                # update Q
+                # update model params
+                
+                ### update Q function model
                 Q[s_k_1,a_k] = r_k + gamma*max(Q[s_k,:])
                     
                 # update current location of agent 

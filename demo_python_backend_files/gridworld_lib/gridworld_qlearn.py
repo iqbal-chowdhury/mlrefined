@@ -7,7 +7,7 @@ class learner():
         self.grid = args['gridworld']
         
         # initialize q-learning params
-        self.gamma = 0.8
+        self.gamma = 1
         self.max_steps = 5*self.grid.width*self.grid.height
         self.exploit_param = 0.5
         self.action_method = 'exploit'
