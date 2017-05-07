@@ -110,7 +110,7 @@ class environment():
        
         ### create custom colormap for gridworld plotting ###
         # color ordering: background, hazard, goal, agent, lights off
-        colors = [(0.9,0.9,0.9),(244/float(255), 66/float(255), 119/float(255)), (66/float(255),244/float(255),131/float(255)), (56/float(255),112/float(255),1),(0,0,0)]
+        colors = [(0.9,0.9,0.9),(255/float(255), 119/float(255), 119/float(255)), (66/float(255),244/float(255),131/float(255)), (1/float(255),100/float(255),200/float(255)),(0,0,0)]   
         self.my_cmap = LinearSegmentedColormap.from_list('colormapX', colors, N=100)
         
         # create training episodes

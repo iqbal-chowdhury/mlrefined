@@ -50,29 +50,30 @@ class learner():
             self.deg = args['degree']
             
         # count dimension of poly
-        test_output = self.poly_features(state = np.zeros((1,2))[0])
+        test_output = self.transform_features(state = np.zeros((1,2))[0])
         self.W = np.random.randn(len(test_output),4)
         
     # builds (poly) features based on input data 
-    def poly_features(self,state):
-        # normalize state data
-        state[0]=state[0]/float(self.grid.width)
-        state[1]=state[1]/float(self.grid.height)
-
-        # produce polynomials of normalized state data
+    def transform_features(self,state):
+        # produce transformed features
+        # F = []
+        # for n in range(self.deg):
+        #    for m in range(self.deg):
+        #        temp = np.cos(n/float(self.deg)*state[0] + m/float(self.deg)*state[1])
+        #       F.append(temp)
+                
         F = []
-        for n in range(self.deg+1):
-            for m in range(self.deg+1):
-                if n + m <= self.deg:
-                    temp = (state[0]**n)*(state[1]**m)
-                    F.append(temp)
+        for n in range(self.deg):
+            for m in range(self.deg):
+                temp = np.cos((2*np.pi/float(self.grid.width))*(n*state[0] + m*state[1]))
+                F.append(temp) 
         F = np.asarray(F)
         F.shape = (len(F),1)
         return F           
     
     def evaluate_h(self,state):
         # produce polynomial features from normalized input state
-        F = self.poly_features(state)
+        F = self.transform_features(state)
 
         # produce h function values
         h_eval = np.dot(self.W.T,F)
@@ -134,7 +135,7 @@ class learner():
                 # update model given new datapoint
                 j = np.argmin(h_eval)
                 h_j = h_eval[j]
-                grad = self.poly_features(np.copy(grid.agent))    
+                grad = self.transform_features(np.copy(grid.agent))    
                 self.W[:,j] = self.W[:,j] - self.step_size*(h_j - q_k)*grad.flatten()    
                 
                 # update training reward
