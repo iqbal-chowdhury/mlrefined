@@ -71,7 +71,12 @@ class environment():
         if args["world_type"] == 'maze':
             self.world_type = 'maze'
             self.agent = [self.height-2, 0]   # initial location agent
-            self.goal = [self.height-2, self.width-1]     # goal block                
+            self.goal = [self.height-2, self.width-1]     # goal block   
+            
+        if args["world_type"] == 'maze_v2':
+            self.world_type = 'maze_v2'
+            self.agent = [self.height-2, 0]   # initial location agent
+            self.goal = [self.height-2, self.width-1]     # goal block     
 
         if args["world_type"] == 'random':
             self.world_type = 'random'
