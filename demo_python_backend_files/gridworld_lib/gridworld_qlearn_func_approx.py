@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from function_approximators import function_approximators
 
 class learner():
     def __init__(self,**args):
@@ -43,41 +44,42 @@ class learner():
             print 'requesting too many validation episodes, the maximum num = ' + str(self.grid.validation_episodes)
             return 
         self.validation_start_schedule = self.grid.validation_start_schedule[:self.validation_episodes]
+            
+        ##### import function approximators class #####
+        functions = function_approximators()  # get instance of function approximator class
         
+        # set default function approximator = linear
+        self.h = functions.linear_approximator
+             
         # initialize function approximation params and weights
         self.deg = 1
         if 'degree' in args:
             self.deg = args['degree']
-            
-        # count dimension of poly
-        test_output = self.transform_features(state = np.zeros((1,2))[0])
-        self.W = np.random.randn(len(test_output),4)
         
-    # builds (poly) features based on input data 
-    def transform_features(self,state):
-        # produce transformed features
-        # F = []
-        # for n in range(self.deg):
-        #    for m in range(self.deg):
-        #        temp = np.cos(n/float(self.deg)*state[0] + m/float(self.deg)*state[1])
-        #       F.append(temp)
-                
-        F = []
-        for n in range(self.deg):
-            for m in range(self.deg):
-                temp = np.cos((2*np.pi/float(self.grid.width))*(n*state[0] + m*state[1]))
-                F.append(temp) 
-        F = np.asarray(F)
-        F.shape = (len(F),1)
-        return F           
+        # initialize weight matrix for function approximator
+        self.num_actions = 4
+        self.W = np.random.randn(self.deg,1 + 3,self.num_actions)     # the number of weights per function --> 1 outer bias, 1 inner bias, 2 (one per state dim)
+        self.W = self.W.astype('float')
+ 
+           
+        # switch for choosing various nonlinear approximators
+        approximator = args['approximator']
+        if approximator == 'fourier':
+            self.h = functions.fourier_approximator
+        
+        # compute gradient of approximator for later use
+        self.h_grad = compute_grad(self.h)
     
-    def evaluate_h(self,state):
-        # produce polynomial features from normalized input state
-        F = self.transform_features(state)
-
-        # produce h function values
-        h_eval = np.dot(self.W.T,F)
-        return h_eval
+    
+    # evaluate a state through our action-based function approximators
+    def evaluate_h(self,s):
+        # loop over function approximators and evaluate each one-at-a-time
+        h_eval = []
+        for a in range(self.num_actions):
+            temp = self.h(self.W[:,:,a])
+            h_eval.append(temp)
+        print (np.shape(h_eval))
+        return np.asarray(h_eval)
     
     ### Q-learning function - version 1 - take random actions ###
     def train(self,**args):
@@ -96,7 +98,7 @@ class learner():
             grid.agent = self.training_start_schedule[n]
             
             ### get model functions evaluated at agent current state ###
-            # get tuple location of agent and take poly transform
+            # get all function approximator evaluations of current state
             h_eval = self.evaluate_h(np.copy(grid.agent))
                 
             # update Q matrix while loc != goal
@@ -117,6 +119,7 @@ class learner():
                 a_k = grid.get_action(method = self.action_method,h = h_eval,exploit_param = self.exploit_param)
                 
                 ### move based on this action
+                print (a_k)
                 s_k = grid.get_movin(action = a_k)
                 
                 ### update current location of agent 
@@ -126,17 +129,17 @@ class learner():
                 r_k = grid.get_reward(state_index = s_k) 
                 
                 ### update model params ###
-                # get poly features from new location
+                # transform current state using chosen function approximator
                 h_eval = self.evaluate_h(np.copy(grid.agent))
                 
                 # update Q function data
                 q_k = r_k + gamma*max(h_eval)
                 
                 # update model given new datapoint
-                j = np.argmin(h_eval)
+                j = np.argmax(h_eval)
                 h_j = h_eval[j]
-                grad = self.transform_features(np.copy(grid.agent))    
-                self.W[:,j] = self.W[:,j] - self.step_size*(h_j - q_k)*grad.flatten()    
+                grad = h_grad(W[:,:,j])   
+                self.W[:,:,j] = self.W[:,:,j] - self.step_size*(h_j - q_k)*grad.flatten()    
                 
                 # update training reward
                 total_episode_reward+=r_k
