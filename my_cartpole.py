@@ -70,7 +70,7 @@ class my_cartpole():
 
                     # update theta_i
                     grad = (h_i - q_k)*state
-                    grad.shape = (len(grad),1)
+                    grad.shape = (len(grad),1) 
 
                     theta_i = old_theta - alpha*grad      
                     thetas[:,action] = theta_i.ravel()

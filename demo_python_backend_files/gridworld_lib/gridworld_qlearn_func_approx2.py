@@ -125,14 +125,23 @@ class learner():
         ### start main Q-learning loop ###
         for n in range(self.training_episodes): 
             # set step length
-            #self.step_size = 1/float(n+1)
+            self.step_size = 1/float(n+1)
             
             # pick this episode's starting position
             grid.agent = self.training_start_schedule[n]
             
             ### get model functions evaluated at agent current state ###
             # get all function approximator evaluations of current state
-            h_eval = self.evaluate_h(grid.agent)
+            s = copy.deepcopy(grid.agent)
+            s = [v+1 for v in s]
+            s.insert(0,1)
+            h_eval = []
+            for i in range(4):
+                w = self.W[i,:,:]
+                temp = np.dot(w,np.asarray(s))
+                h_eval.append(temp)
+            h_eval = np.asarray(h_eval)
+            
                 
             # update Q matrix while loc != goal
             episode_history = []      # container for storing this episode's journey
@@ -168,15 +177,25 @@ class learner():
                 
                 ### update model params ###
                 # transform current state using chosen function approximator
-                h_eval = self.evaluate_h(grid.agent)
-                
+                s = copy.deepcopy(grid.agent)
+                s = [v+1 for v in s]
+                s.insert(0,1)
+                h_eval = []
+                for i in range(4):
+                    w = self.W[i,:,:]
+                    temp = np.dot(w,np.asarray(s))
+                    h_eval.append(temp)
+                h_eval = np.asarray(h_eval)
+                            
                 # update Q function data
                 ind = np.argmax(h_eval)
                 h_k = h_eval[ind]
                 q_k = r_k + gamma*h_k
                 
                 # update model given new datapoint
-                grad = self.h_grad(self.W[a_k,:,:])   
+                grad = np.asarray(s)
+                grad.shape = (1,len(grad))
+                
                 self.W[a_k,:,:] = self.W[a_k,:,:] - self.step_size*(h_s_k_1 - q_k)*grad    
                 
                 # update training reward

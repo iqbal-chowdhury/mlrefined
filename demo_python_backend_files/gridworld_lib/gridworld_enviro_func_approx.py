@@ -47,6 +47,11 @@ class environment():
             print 'world_type parameter required, choose maze, random, or moat'
 
         ### set world size ###    
+        if args["world_size"] == 'tiny':
+            self.world_size = 'tiny'   
+            self.width = 4
+            self.height = 4
+            
         if args["world_size"] == 'small':
             self.world_size = 'small'
             self.width = 13
@@ -68,6 +73,11 @@ class environment():
                 self.states.append(str(i) + ',' + str(j))
                 
         ### with world type load in hazards ###
+        if args["world_type"] == 'demo':
+            self.world_type = 'maze'
+            self.agent = [self.height-2, 0]   # initial location agent
+            self.goal = [self.height-2, self.width-1]     # goal block   
+        
         if args["world_type"] == 'maze':
             self.world_type = 'maze'
             self.agent = [self.height-2, 0]   # initial location agent
@@ -84,11 +94,12 @@ class environment():
             self.goal = [0,self.width-1]     # goal block
 
         ### load in hazards for given world size and type ###    
-        hazard_csvname = 'demo_datasets/RL_datasets/' + args["world_size"] + '_' + args["world_type"] + '_hazards.csv'
+        #hazard_csvname = 'demo_datasets/RL_datasets/' + args["world_size"] + '_' + args["world_type"] + '_hazards.csv'
 
         # load in preset hazard locations from csv
-        self.hazards = pd.read_csv(hazard_csvname,header = None)
-
+        #self.hazards = pd.read_csv(hazard_csvname,header = None)
+        self.hazards = []
+        
         # setup hazard reward value
         self.hazard_reward = -200 
         if 'hazard_reward' in args:
