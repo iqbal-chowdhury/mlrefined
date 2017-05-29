@@ -6,6 +6,7 @@ import time
 from IPython.display import clear_output
 from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.patches as patches
+from mpl_toolkits.mplot3d import Axes3D
 
 class animator():
         
@@ -344,6 +345,41 @@ class animator():
                 action = q_dir[i]
                 self.add_arrows(ax,state,action)
     
+    ### plot Q functions in 3d ###
+    def show_Qfunc_in_3d(self,world,learner):
+        # process states for scatter plotting
+        states = world.states 
+        plot_ready_states = np.zeros((len(states),2))
+        for i in range(len(states)):
+            a = states[i]
+            b = a.split(',')
+            state = [int(b[0])]
+            state.append(int(b[1]))
+            plot_ready_states[i,0] = state[0]
+            plot_ready_states[i,1] = state[1]
+        
+        ### plot q functions ###
+        # build figure for Q functions
+        Q = learner.Q
+        labels = ['down','up','left','right']
+        colors = ['r','g','b','k']
+        fig = plt.figure(num=None, figsize = (10,3), dpi=80, facecolor='w', edgecolor='k')
+
+        ### create figure ###
+        for m in range(4):
+            # make panel for plotting in 3d
+            ax1 = plt.subplot(1,4,m+1,projection = '3d')
+
+            # scatter plot
+            ax1.scatter(plot_ready_states[:,0],plot_ready_states[:,1],Q[:,m],c = colors[m])
+
+            # clean up plot
+            ax1.view_init(10,20)  
+            ax1.set_title('$Q_'+str(m+1) + '$' + ' (' + labels[m] + ')',fontsize = 18)
+
+        fig.subplots_adjust(left=0,right=1,bottom=0,top=1)   # remove whitespace around 3d figure
+        plt.show()
+     
     ### plot the optimal policy in 3d ###
     def show_optimal_policy_in_3d(self,world,learner):
         # process states for scatter plotting
@@ -369,33 +405,14 @@ class animator():
 
         q_dir = q_dir.tolist()
         q_dir = [int(s[0]) for s in q_dir]
-        labels = ['down','up','left','right']
-        colors = ['r','g','b','k']
-        
-        ### plot q functions ###
-        # build figure for Q functions
-        fig = plt.figure(num=None, figsize = (10,3), dpi=80, facecolor='w', edgecolor='k')
 
-        ### create figure ###
-        for m in range(4):
-            # make panel for plotting in 3d
-            ax1 = plt.subplot(1,4,m+1,projection = '3d')
-
-            # scatter plot
-            ax1.scatter(plot_ready_states[:,0],plot_ready_states[:,1],Q[:,m],c = colors[m])
-
-            # clean up plot
-            ax1.view_init(10,20)  
-            ax1.set_title('$Q_'+str(m+1) + '$' + ' (' + labels[m] + ')',fontsize = 18)
-
-        fig.subplots_adjust(left=0,right=1,bottom=0,top=1)   # remove whitespace around 3d figure
-        plt.show()
-        
         #### build optimal policy ####
         # build figure for optimal policy function
-        fig = plt.figure(num=None, figsize = (6,6), dpi=80, facecolor='w', edgecolor='k')
+        labels = ['down','up','left','right']
+        colors = ['r','g','b','k']
+        fig = plt.figure(num=None, figsize = (5,5), dpi=80, facecolor='w', edgecolor='k')
        
-        # make panel for plotting in 3d
+        ### make panel for plotting in 3d
         ax = plt.subplot(1,1,1,projection = '3d')
         
         # scatter plot
@@ -412,7 +429,7 @@ class animator():
             leg.legendHandles[i].set_color(colors[i])
 
         fig.subplots_adjust(left=0,right=1,bottom=0,top=1)   # remove whitespace around 3d figure
+        
+        ### plot arrow map
+        self.draw_arrow_map(world = world,learner = learner)
         plt.show()
-
-                
-              
